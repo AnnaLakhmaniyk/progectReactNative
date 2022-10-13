@@ -4,14 +4,51 @@ import {
   View,
   TouchableWithoutFeedback,
   Keyboard,
-  ImageBackground,
 } from "react-native";
 import { useFonts } from "expo-font";
 import * as SplashScreen from "expo-splash-screen";
+
+import { NavigationContainer } from "@react-navigation/native";
+import { createStackNavigator } from "@react-navigation/stack";
+import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
+
 import RegistrationScreen from "./component/Screens/RegistrationScreen";
 import LoginScreen from "./component/Screens/LoginScreen";
 
+const Stack = createStackNavigator();
+const Tab = createBottomTabNavigator();
+// import { createStackNavigator } from '@react-navigation/stack';
+import { useRoute } from "./router";
+
+// function useRoute(isAuth) {
+//   if (!isAuth) {
+//     return (
+//       <>
+//         <Stack.Screen
+//           options={{ headerShown: false }}
+//           name="Login"
+//           component={LoginScreen}
+//         />
+//         <Stack.Screen
+//           options={{ headerShown: false }}
+//           name="Registration"
+//           component={RegistrationScreen}
+//         />
+//       </>
+//     );
+//   }
+//   return (
+//     <Stack.Screen
+//       options={{ headerShown: false }}
+//       name="Home "
+//       component={Home}
+//     />
+//   );
+// }
+
 export default function App() {
+  const routing = useRoute({});
+
   const [fontsLoaded] = useFonts({
     "Poppins-Medium": require("./assets/fonts/Poppins-Medium.ttf"),
     "Poppins-Regular": require("./assets/fonts/Poppins-Regular.ttf"),
@@ -30,13 +67,9 @@ export default function App() {
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
       <View style={styles.container} onLayout={onLayoutRootView}>
-        <ImageBackground
-          source={{ uri: "https://i.postimg.cc/d1MrrJNz/Photo-BG.png" }}
-          style={styles.image}
-        >
-          <RegistrationScreen />
-          {/* <LoginScreen/> */}
-        </ImageBackground>
+        <NavigationContainer>
+          <Stack.Navigator>{routing}</Stack.Navigator>
+        </NavigationContainer>
       </View>
     </TouchableWithoutFeedback>
   );
