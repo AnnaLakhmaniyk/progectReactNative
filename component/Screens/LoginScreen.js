@@ -8,10 +8,11 @@ import {
     TouchableOpacity,
     Keyboard,
     Dimensions,
+    ImageBackground,
   } from "react-native";
   import { useEffect, useState } from "react";
   
-  function LoginScreen() {
+  function LoginScreen({ navigation }) {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [show, setShow] = useState(true);
@@ -62,6 +63,10 @@ import {
     const keyboardVerticalOffset = Platform.OS === "ios" ? "padding" : "height";
   
     return (
+        <ImageBackground
+        source={{ uri: "https://i.postimg.cc/d1MrrJNz/Photo-BG.png" }}
+        style={styles.image}
+      >
       <View style={styles.container}>
         <KeyboardAvoidingView behavior={keyboardVerticalOffset}>
           <View style={styles.formContainer}>
@@ -103,12 +108,21 @@ import {
             </TouchableOpacity>
           </View>
         </KeyboardAvoidingView>
-        <Text style={styles.textLink}>Don't have an account? Registration</Text>
+        <TouchableOpacity onPress={() => navigation.navigate("Registration")}>
+        <Text style={styles.textLink} >Don't have an account? Registration</Text>
+        </TouchableOpacity>
       </View>
+      </ImageBackground>
     );
   }
   
   const styles = StyleSheet.create({
+    image: {
+        flex: 1,
+        resizeMode: "cover",
+        justifyContent: "center",
+        // alignItems: "center",
+      },
     container: {
       backgroundColor: "#fff",
       paddingTop: 32,
