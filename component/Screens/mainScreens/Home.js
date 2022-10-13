@@ -27,13 +27,13 @@ function Home({ navigation }) {
             />
           ),
 
-          tabBarIcon: ({ focused, size, color }) => {
-            return focused ? (
-              <AntDesign name="appstore-o" size={size} color="#FF6C00" />
-            ) : (
-              <AntDesign name="appstore-o" size={size} color={color} />
-            );
-          },
+          tabBarIcon: ({ focused, size, color }) => (
+            <AntDesign
+              name="appstore-o"
+              size={size}
+              color={focused ? "#FF6C00" : { color }}
+            />
+          ),
         }}
       />
       <Tab.Screen
@@ -71,13 +71,13 @@ function Home({ navigation }) {
         component={ProfileScreen}
         options={{
           headerShown: false,
-          tabBarIcon: ({ focused, size, color }) => {
-            return focused ? (
-              <AntDesign name="user" size={size} color="#FF6C00" />
-            ) : (
-              <AntDesign name="user" size={size} color={color} />
-            );
-          },
+          tabBarIcon: ({ focused, size, color }) => (
+            <AntDesign
+              name="user"
+              size={size}
+              color={focused ? "#FF6C00" : { color }}
+            />
+          ),
         }}
       />
     </Tab.Navigator>
