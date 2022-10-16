@@ -1,19 +1,38 @@
-import {
-    StyleSheet,
-    Text,
-    View,
-  } from "react-native";
-function MapScreen(){
-    return (<View style={styles.container}>
-        <Text>MapScreen</Text>
-    </View>)
-
+import { StyleSheet, Text, View } from "react-native";
+import MapView, { Marker } from "react-native-maps";
+function MapScreen({ route }) {
+  console.log(route.params.location.longitude);
+  return (
+    <View style={styles.container}>
+      <MapView
+        style={{ flex: 1 }}
+        initialRegion={{
+          longitude: route.params.location.longitude,
+          latitude: route.params.location.latitude,
+          latitudeDelta: 0.001,
+          longitudeDelta: 0.006,
+        }}
+      >
+        <Marker
+          coordinate={{
+            longitude: route.params.location.longitude,
+            latitude: route.params.location.latitude,
+          }}
+          title={route.params.title}
+        ></Marker>
+      </MapView>
+    </View>
+  );
 }
 const styles = StyleSheet.create({
-    container: {
-      flex: 1,
-     justifyContent:"center",
-     alignItems:"center"
-    },
-  });
-  export default MapScreen;
+  container: {
+    flex: 1,
+    justifyContent: "center",
+  },
+  text: {
+    textAlign: "center",
+    color: "#515151",
+    fontFamily: "Poppins-Medium",
+  },
+});
+export default MapScreen;
