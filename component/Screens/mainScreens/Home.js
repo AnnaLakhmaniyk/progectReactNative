@@ -5,6 +5,8 @@ const Tab = createBottomTabNavigator();
 import CreatePostsScreen from "./CreatePostsScreen";
 import PostsScreen from "./PostsScreen";
 import ProfileScreen from "./ProfileScreen";
+import MapScreen from "./MapScreen";
+import CommentsScreen from "./CommentsScreen";
 function Home({ navigation }) {
   return (
     <Tab.Navigator
@@ -78,6 +80,50 @@ function Home({ navigation }) {
               color={focused ? "#FF6C00" : { color }}
             />
           ),
+        }}
+      />
+      <Tab.Screen
+        name="Map"
+        component={MapScreen}
+        options={{
+          headerLeft: () => (
+            <TouchableOpacity
+              activeOpacity={0.7}
+              style={styles.back}
+              onPress={() => navigation.navigate("Posts")}
+            >
+              <AntDesign
+                name="arrowleft"
+                size={24}
+                color="rgba(33, 33, 33, 0.8)"
+              />
+            </TouchableOpacity>
+          ),
+          tabBarButton: () => null,
+          tabBarVisible: false,
+          tabBarStyle: { display: "none" },
+        }}
+      />
+      <Tab.Screen
+        name="Comments"
+        component={CommentsScreen}
+        options={{
+          headerLeft: () => (
+            <TouchableOpacity
+              activeOpacity={0.7}
+              style={styles.back}
+              onPress={() => navigation.navigate("Posts")}
+            >
+              <AntDesign
+                name="arrowleft"
+                size={24}
+                color="rgba(33, 33, 33, 0.8)"
+              />
+            </TouchableOpacity>
+          ),
+          tabBarButton: () => null,
+          tabBarVisible: false,
+          tabBarStyle: { display: "none" },
         }}
       />
     </Tab.Navigator>
