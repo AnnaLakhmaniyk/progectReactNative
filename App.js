@@ -1,4 +1,5 @@
-import React, { useCallback } from "react";
+import React, { useCallback, useEffect } from "react";
+import { Provider } from "react-redux";
 import {
   StyleSheet,
   View,
@@ -9,45 +10,21 @@ import { useFonts } from "expo-font";
 import * as SplashScreen from "expo-splash-screen";
 
 import { NavigationContainer } from "@react-navigation/native";
-import { createStackNavigator } from "@react-navigation/stack";
-import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
+// import { createStackNavigator } from "@react-navigation/stack";
+import { UseRoute } from "./router";
+import { store } from "./redux/store";
 
-import RegistrationScreen from "./component/Screens/RegistrationScreen";
-import LoginScreen from "./component/Screens/LoginScreen";
+// import { authStateChangeUser } from "./redux/authOperation";
 
-const Stack = createStackNavigator();
-const Tab = createBottomTabNavigator();
-// import { createStackNavigator } from '@react-navigation/stack';
-import { useRoute } from "./router";
-
-// function useRoute(isAuth) {
-//   if (!isAuth) {
-//     return (
-//       <>
-//         <Stack.Screen
-//           options={{ headerShown: false }}
-//           name="Login"
-//           component={LoginScreen}
-//         />
-//         <Stack.Screen
-//           options={{ headerShown: false }}
-//           name="Registration"
-//           component={RegistrationScreen}
-//         />
-//       </>
-//     );
-//   }
-//   return (
-//     <Stack.Screen
-//       options={{ headerShown: false }}
-//       name="Home "
-//       component={Home}
-//     />
-//   );
-// }
+// const Stack = createStackNavigator();
 
 export default function App() {
-  const routing = useRoute({});
+  // const { state } = useSelector((state) => state.auth);
+  // const dispatch = useDispatch();
+
+  // useEffect(() => {
+  //   dispatch(authStateChangeUser());
+  // }, [state]);
 
   const [fontsLoaded] = useFonts({
     "Poppins-Medium": require("./assets/fonts/Poppins-Medium.ttf"),
@@ -65,13 +42,16 @@ export default function App() {
   }
 
   return (
-    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-      <View style={styles.container} onLayout={onLayoutRootView}>
-        <NavigationContainer>
-          <Stack.Navigator>{routing}</Stack.Navigator>
-        </NavigationContainer>
-      </View>
-    </TouchableWithoutFeedback>
+    <Provider store={store}>
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+        <View style={styles.container} onLayout={onLayoutRootView}>
+          <NavigationContainer>
+            <UseRoute />
+            {/* <Stack.Navigator>{routing}</Stack.Navigator> */}
+          </NavigationContainer>
+        </View>
+      </TouchableWithoutFeedback>
+    </Provider>
   );
 }
 
