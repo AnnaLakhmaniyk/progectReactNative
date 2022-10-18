@@ -66,7 +66,7 @@ function PostsScreen({ route, navigation }) {
     <View style={styles.container}>
       <TouchableOpacity
         style={styles.userBox}
-        // onPress={() => navigation.navigate("Profile")}
+        onPress={() => navigation.navigate("Profile")}
       >
         {avatar ? (
           <Image
@@ -121,23 +121,39 @@ function PostsScreen({ route, navigation }) {
                     });
                   }}
                 >
-                  <EvilIcons name="comment" size={24} color="#BDBDBD" />
+                  <EvilIcons
+                    name="comment"
+                    size={24}
+                    color="rgba(33, 33, 33, 0.8)"
+                  />
                 </TouchableOpacity>
                 <Text style={styles.textPost}> {item.comments || 0}</Text>
               </View>
               <View style={styles.comentsInfo}>
                 <TouchableOpacity onPress={() => addLike(item.id)}>
                   {item.likes.includes(`${userId}`) ? (
-                    <AntDesign name="like1" size={22} color="#BDBDBD" />
+                    <AntDesign
+                      name="like1"
+                      size={22}
+                      color="rgba(33, 33, 33, 0.8)"
+                    />
                   ) : (
-                    <AntDesign name="like2" size={22} color="#BDBDBD" />
+                    <AntDesign
+                      name="like2"
+                      size={22}
+                      color="rgba(33, 33, 33, 0.8)"
+                    />
                   )}
                 </TouchableOpacity>
                 <Text style={styles.textPost}> {item.likes?.length || 0}</Text>
               </View>
 
               <View style={styles.locationInfo}>
-                <Ionicons name="location-outline" size={22} color="#BDBDBD" />
+                <Ionicons
+                  name="location-outline"
+                  size={22}
+                  color="rgba(33, 33, 33, 0.8)"
+                />
                 <Text
                   style={styles.textLocation}
                   onPress={() => {
@@ -169,12 +185,12 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   textName: {
-    color: "#515151",
+    color: "#212121",
     fontFamily: "Poppins-Medium",
     fontSize: 13,
   },
   textEmail: {
-    color: "#BDBDBD",
+    color: "rgba(33, 33, 33, 0.8)",
     fontFamily: "Poppins-Medium",
     fontSize: 11,
   },
@@ -189,11 +205,11 @@ const styles = StyleSheet.create({
     marginTop: 11,
   },
   textLocation: {
-    color: "#BDBDBD ",
+    color: "#BDBDBD",
     fontFamily: "Poppins-Medium",
     fontSize: 16,
-    marginLeft: 5,
     textDecorationLine: "underline",
+    marginLeft: 5,
   },
   comentsInfo: {
     flexDirection: "row",
