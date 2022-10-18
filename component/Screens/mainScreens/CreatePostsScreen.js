@@ -27,7 +27,6 @@ function CreatePostsScreen({ navigation }) {
   const [locationName, setLocationName] = useState("");
   const [photoName, setPhotoName] = useState("");
 
-  console.log("photoUri-------", photoUri);
   const [focus, setFocus] = useState(false);
   const { userId, login } = useSelector((state) => state.auth);
   useEffect(() => {
@@ -68,10 +67,8 @@ function CreatePostsScreen({ navigation }) {
       const response = await fetch(photoUri);
       const file = await response.blob();
       const storageRef = await ref(storage, `posts/${postId}`);
-      console.log("storageRef -----", storageRef);
       await uploadBytesResumable(storageRef, file);
       const photo = await getDownloadURL(storageRef);
-      console.log("photo-----", photo);
 
       let { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== "granted") {
@@ -79,7 +76,6 @@ function CreatePostsScreen({ navigation }) {
         return;
       }
       const location = await Location.getCurrentPositionAsync({});
-      console.log("location-----", location);
 
       return { photo, location };
     } catch (err) {
