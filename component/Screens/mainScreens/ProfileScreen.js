@@ -1,19 +1,277 @@
-import {
-    StyleSheet,
-    Text,
-    View,
-  } from "react-native";
-function ProfileScreen(){
-    return (<View style={styles.container}>
-        <Text>ProfileScreen</Text>
-    </View>)
+import { useState, useEffect } from "react";
+import * as ImagePicker from "expo-image-picker";
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { collection, getDocs, where, query } from "firebase/firestore";
+import { useSelector, useDispatch } from "react-redux";
+import { AntDesign, Ionicons, EvilIcons, Feather } from "@expo/vector-icons";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { updateAvatar, authSignOutUser } from "../../../redux/authOperation";
+import { storage, db } from "../../../assets/firebase/config";
 
+import {
+  StyleSheet,
+  Image,
+  Text,
+  View,
+  ImageBackground,
+  TouchableOpacity,
+  ScrollView,
+  ActivityIndicator,
+} from "react-native";
+
+function ProfileScreen({ navigation, route }) {
+  const { userId, login, avatar } = useSelector((state) => state.auth);
+  const [posts, setPosts] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const dispatch = useDispatch();
+
+  const uploadePhotoToServer = async (avatar) => {
+    try {
+      const response = await fetch(avatar);
+      const file = await response.blob();
+      const storageRef = ref(storage, `avatars/${userId}`);
+      await uploadBytes(storageRef, file);
+      const path = await getDownloadURL(ref(storage, `avatars/${userId}`));
+      return path;
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const pickImage = async () => {
+    try {
+      let result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.All,
+        allowsEditing: true,
+        aspect: [4, 3],
+        quality: 1,
+      });
+
+      if (!result.cancelled) {
+        setLoading(true);
+        const avatar = await uploadePhotoToServer(result.uri);
+        dispatch(updateAvatar(avatar));
+        setLoading(false);
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const getAllPosts = async () => {
+    const q = query(collection(db, "posts"), where("userId", "==", userId));
+    const querySnapshot = await getDocs(q);
+    let newPosts = [];
+    querySnapshot.forEach((doc) => {
+      newPosts.push({ ...doc.data(), id: doc.id });
+    });
+    setPosts(newPosts);
+  };
+
+  useEffect(() => {
+    const unsubscribe = navigation.addListener("focus", () => {
+      getAllPosts();
+    });
+    return unsubscribe;
+  }, [navigation]);
+
+  return (
+    <View style={styles.container}>
+      <ImageBackground
+        source={{ uri: "https://i.postimg.cc/d1MrrJNz/Photo-BG.png" }}
+        style={styles.background}
+      >
+        <ScrollView
+          contentContainerStyle={{ flex: posts.length > 0 ? "none" : 1 }}
+          bounces={false}
+        >
+          <View style={styles.formBackdrop}>
+            <View style={styles.logout}>
+              <TouchableOpacity onPress={() => dispatch(authSignOutUser())}>
+                <Feather name="log-out" size={24} color="#BDBDBD" />
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.centerBox}>
+              <View style={styles.avatarBox}>
+                <Image
+                  style={{ height: "100%", width: "100%", borderRadius: 16 }}
+                  source={{ uri: avatar }}
+                ></Image>
+
+                <TouchableOpacity style={styles.border} onPress={pickImage}>
+                  <Text style={styles.plus}>{!avatar ? "+" : "-"}</Text>
+                </TouchableOpacity>
+              </View>
+              {loading && <ActivityIndicator style={styles.loader} />}
+            </View>
+            <Text style={styles.titleText}>{login}</Text>
+            <View style={{ marginHorizontal: 16 }}>
+              {posts.map((item) => (
+                <View style={styles.postBox} key={item.id}>
+                  <Image
+                    source={{ uri: item.photo }}
+                    style={{ height: 240, borderRadius: 16 }}
+                  ></Image>
+                  <View style={{ marginTop: 8 }}>
+                    <Text style={styles.textPost}>{item.name}</Text>
+                  </View>
+                  <View style={styles.postInfoBox}>
+                    <View style={styles.comentsInfo}>
+                      <TouchableOpacity
+                        onPress={async () => {
+                          navigation.navigate("Comments", {
+                            photo: item.photo,
+                            id: item.id,
+                          });
+                        }}
+                      >
+                        <EvilIcons
+                          name="comment"
+                          size={24}
+                          color="rgba(33, 33, 33, 0.8)"
+                        />
+                      </TouchableOpacity>
+                      <Text style={styles.textPost}> {item.comments || 0}</Text>
+                    </View>
+                    <View style={styles.comentsInfo}>
+                      <View>
+                        <AntDesign
+                          name="like1"
+                          size={24}
+                          color="rgba(33, 33, 33, 0.8)"
+                        />
+                      </View>
+                      <Text style={styles.textPost}>
+                        {item.likes?.length || 0}
+                      </Text>
+                    </View>
+                    <View style={styles.locationInfo}>
+                      <Ionicons
+                        name="location-outline"
+                        size={20}
+                        color="rgba(33, 33, 33, 0.8)"
+                      />
+                      <Text
+                        style={styles.textLocation}
+                        onPress={() => {
+                          navigation.navigate("Map", {
+                            location: item.location,
+                            title: item.locationName,
+                          });
+                        }}
+                      >
+                        {item.locationName}
+                      </Text>
+                    </View>
+                  </View>
+                </View>
+              ))}
+            </View>
+          </View>
+        </ScrollView>
+      </ImageBackground>
+    </View>
+  );
 }
+
 const styles = StyleSheet.create({
-    container: {
-      flex: 1,
-     justifyContent:"center",
-     alignItems:"center"
-    },
-  });
-  export default ProfileScreen;
+  container: {
+    flex: 1,
+    backgroundColor: "#fff",
+  },
+  background: {
+    flex: 1,
+    resizeMode: "cover",
+  },
+  formBackdrop: {
+    backgroundColor: "#F6F6F6",
+    borderTopLeftRadius: 25,
+    borderTopRightRadius: 25,
+    paddingBottom: 110,
+    marginTop: 150,
+    flex: 1,
+  },
+  logout: {
+    position: "absolute",
+    top: 24,
+    right: 24,
+    zIndex: 1,
+  },
+  border: {
+    position: "absolute",
+    width: 25,
+    height: 25,
+    bottom: 14,
+    right: -12.5,
+    borderRadius: 50,
+    borderColor: "#FF6C00",
+    backgroundColor: "#F6F6F6",
+    borderWidth: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  plus: {
+    color: "#FF6C00",
+    fontSize: 18,
+  },
+
+  avatarBox: {
+    height: 120,
+    width: 120,
+    borderRadius: 16,
+    backgroundColor: "#515151",
+    borderColor: "#fff",
+    borderWidth: 1,
+  },
+  centerBox: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    top: -60,
+    alignItems: "center",
+  },
+  loader: {
+    position: "absolute",
+    top: 50,
+  },
+  addIconBox: {
+    position: "absolute",
+    right: -13,
+    bottom: 14,
+  },
+  titleText: {
+    color: "#212121",
+    fontFamily: "Poppins-Medium",
+    textAlign: "center",
+    marginTop: 92,
+    marginBottom: 33,
+    fontSize: 30,
+  },
+  postBox: {
+    marginBottom: 34,
+  },
+  postInfoBox: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginTop: 11,
+  },
+  comentsInfo: {
+    flexDirection: "row",
+  },
+  locationInfo: {
+    flexDirection: "row",
+  },
+  textPost: {
+    color: "#BDBDBD",
+    fontFamily: "Poppins-Medium",
+    fontSize: 16,
+  },
+  textLocation: {
+    color: "#BDBDBD",
+    fontFamily: "Poppins-Medium",
+    fontSize: 16,
+    textDecorationLine: "underline",
+  },
+});
+export default ProfileScreen;
