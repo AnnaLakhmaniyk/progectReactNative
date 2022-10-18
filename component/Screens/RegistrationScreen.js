@@ -9,11 +9,15 @@ import {
   Keyboard,
   Dimensions,
   ImageBackground,
+  Image,
 } from "react-native";
 import { useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
-import { authSignUpUser } from "../../redux/authOperation";
+import * as ImagePicker from "expo-image-picker";
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { authSignUpUser, updateAvatar } from "../../redux/authOperation";
 import { authSlice } from "../../redux/authReducer";
+import { storage } from "../../assets/firebase/config";
 
 function RegistrationScreen({ navigation }) {
   const [login, setLogin] = useState("");
@@ -54,6 +58,30 @@ function RegistrationScreen({ navigation }) {
     setEmail("");
     setPassword("");
   };
+  const pickImage = async () => {
+    let result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.All,
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 1,
+    });
+
+    if (!result.cancelled) {
+      setAvatar(result.uri);
+    }
+  };
+  const uploadePhotoToServer = async (avatarId) => {
+    try {
+      const response = await fetch(avatar);
+      const file = await response.blob();
+      const storageRef = ref(storage, `avatars/${avatarId}`);
+      await uploadBytes(storageRef, file);
+      const path = await getDownloadURL(ref(storage, `avatars/${avatarId}`));
+      setAvatar(path);
+    } catch (error) {
+      console.log(error);
+    }
+  };
 
   const handleClick = async () => {
     Keyboard.dismiss();
@@ -66,7 +94,8 @@ function RegistrationScreen({ navigation }) {
         password,
         login,
       });
-      console.log(user.uid);
+      await uploadePhotoToServer(user.uid);
+      dispatch(updateAvatar(avatar));
       dispatch(
         authSlice.actions.updateUser({
           userId: user.uid,
@@ -95,11 +124,18 @@ function RegistrationScreen({ navigation }) {
       style={styles.image}
     >
       <View style={styles.containerEL}>
-        <View style={styles.avatar}>
-          <View style={styles.border}>
-            <Text style={styles.plus}>+</Text>
+        <View style={styles.centerBox}>
+          <View style={styles.avatarBox}>
+            <Image
+              style={{ height: "100%", width: "100%", borderRadius: 16 }}
+              source={{ uri: avatar }}
+            ></Image>
+            <TouchableOpacity style={styles.border} onPress={pickImage}>
+              <Text style={styles.plus}>{!avatar ? "+" : "-"}</Text>
+            </TouchableOpacity>
           </View>
         </View>
+
         <KeyboardAvoidingView behavior={keyboardVerticalOffset}>
           <View style={styles.formContainer}>
             <Text style={styles.title}>Registration</Text>
@@ -175,6 +211,26 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 25,
     alignItems: "center",
   },
+  centerBox: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    top: -60,
+    alignItems: "center",
+  },
+  avatarBox: {
+    height: 120,
+    width: 120,
+    borderRadius: 16,
+    backgroundColor: "#515151",
+    borderColor: "#fff",
+    borderWidth: 1,
+  },
+  addIconBox: {
+    position: "absolute",
+    right: -13,
+    bottom: 14,
+  },
   avatar: {
     position: "absolute",
     width: 120,
@@ -191,12 +247,14 @@ const styles = StyleSheet.create({
     right: -12.5,
     borderRadius: 50,
     borderColor: "#FF6C00",
+    backgroundColor: "#F6F6F6",
     borderWidth: 1,
     justifyContent: "center",
     alignItems: "center",
   },
   plus: {
     color: "#FF6C00",
+    fontSize: 18,
   },
   formContainer: {
     width: 343,

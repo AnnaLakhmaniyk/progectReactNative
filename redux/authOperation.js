@@ -40,7 +40,7 @@ export const authStateChangeUser = () => async (dispatch, getSatte) => {
             userId: user.uid,
             login: user.displayName,
             email: user.email,
-            // avatar: user.photoURL,
+            avatar: user.photoURL,
           })
         );
         dispatch(authSlice.actions.authStateChange({ state: true }));
@@ -55,6 +55,21 @@ export const authSignOutUser = () => async (dispatch, getSatte) => {
   try {
     await signOut(auth);
     dispatch(authSlice.actions.authLogOut());
+  } catch (error) {
+    console.log(error.message);
+  }
+};
+export const updateAvatar = (newAvatar) => async (dispatch, getSatte) => {
+  try {
+    await updateProfile(auth.currentUser, {
+      photoURL: newAvatar,
+    });
+    const updatedUser = auth.currentUser;
+    dispatch(
+      authSlice.actions.updateAvatarAction({
+        avatar: updatedUser.photoURL,
+      })
+    );
   } catch (error) {
     console.log(error.message);
   }

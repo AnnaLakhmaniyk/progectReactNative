@@ -7,34 +7,92 @@ import {
   TouchableOpacity,
 } from "react-native";
 import { useState, useEffect } from "react";
-import { EvilIcons, Ionicons } from "@expo/vector-icons";
+import { useSelector, useDispatch } from "react-redux";
+import { EvilIcons, Ionicons, AntDesign } from "@expo/vector-icons";
+import { db } from "../../../assets/firebase/config";
+import {
+  collection,
+  getDocs,
+  getDoc,
+  arrayUnion,
+  arrayRemove,
+  doc,
+  updateDoc,
+  onSnapshot,
+} from "firebase/firestore";
+
 function PostsScreen({ route, navigation }) {
   const [post, setPost] = useState([]);
+  const { email, login, avatar, userId } = useSelector((state) => state.auth);
+
+  const dispatch = useDispatch();
+
+  const getAllPosts = async () => {
+    const querySnapshot = await getDocs(collection(db, "posts"));
+    let newPosts = [];
+    querySnapshot.forEach((doc) => {
+      newPosts.push({ ...doc.data(), id: doc.id });
+    });
+    setPost(newPosts);
+  };
+
+  const addLike = async (id) => {
+    const result = await getDoc(doc(db, "posts", `${id}`));
+    if (result.data().likes.includes(`${userId}`)) {
+      await updateDoc(doc(db, "posts", `${id}`), {
+        likes: arrayRemove(`${userId}`),
+      });
+    } else {
+      await updateDoc(doc(db, "posts", `${id}`), {
+        likes: arrayUnion(`${userId}`),
+      });
+    }
+  };
 
   useEffect(() => {
-    if (route.params) {
-      setPost((prevState) => [...prevState, route.params]);
-    }
-  }, [route.params]);
+    const unsubscribe = onSnapshot(
+      collection(db, "posts"),
+      (snapshot) => {
+        getAllPosts();
+      },
+      (error) => {
+        console.log(error);
+      }
+    );
+    return () => unsubscribe();
+  }, []);
+
   return (
     <View style={styles.container}>
       <TouchableOpacity
         style={styles.userBox}
         // onPress={() => navigation.navigate("Profile")}
       >
-        <View
-          style={{
-            height: 60,
-            width: 60,
-            borderRadius: 16,
-            backgroundColor: "#515151",
-          }}
-        ></View>
+        {avatar ? (
+          <Image
+            source={{ uri: avatar }}
+            style={{
+              height: 60,
+              width: 60,
+              borderRadius: 16,
+            }}
+          ></Image>
+        ) : (
+          <View
+            style={{
+              height: 60,
+              width: 60,
+              borderRadius: 16,
+              backgroundColor: "#515151",
+            }}
+          ></View>
+        )}
         <View style={{ marginLeft: 8 }}>
-          <Text style={styles.textName}>Login</Text>
-          <Text style={styles.textEmail}>email</Text>
+          <Text style={styles.textName}>{login}</Text>
+          <Text style={styles.textEmail}>{email}</Text>
         </View>
       </TouchableOpacity>
+
       <FlatList
         data={post}
         keyExtractor={(item) => item.id}
@@ -57,26 +115,39 @@ function PostsScreen({ route, navigation }) {
               <View style={styles.comentsInfo}>
                 <TouchableOpacity
                   onPress={() => {
-                    navigation.navigate("Comments");
+                    navigation.navigate("Comments", {
+                      photo: item.photo,
+                      id: item.id,
+                    });
                   }}
                 >
                   <EvilIcons name="comment" size={24} color="#BDBDBD" />
                 </TouchableOpacity>
-                <Text style={styles.textPost}> 0</Text>
+                <Text style={styles.textPost}> {item.comments || 0}</Text>
+              </View>
+              <View style={styles.comentsInfo}>
+                <TouchableOpacity onPress={() => addLike(item.id)}>
+                  {item.likes.includes(`${userId}`) ? (
+                    <AntDesign name="like1" size={22} color="#BDBDBD" />
+                  ) : (
+                    <AntDesign name="like2" size={22} color="#BDBDBD" />
+                  )}
+                </TouchableOpacity>
+                <Text style={styles.textPost}> {item.likes?.length || 0}</Text>
               </View>
 
               <View style={styles.locationInfo}>
-                <Ionicons name="location-outline" size={20} color="#BDBDBD" />
+                <Ionicons name="location-outline" size={22} color="#BDBDBD" />
                 <Text
                   style={styles.textLocation}
                   onPress={() => {
                     navigation.navigate("Map", {
-                      location: item.coordinatPhoto,
-                      title: item.location,
+                      location: item.location,
+                      title: item.locationName,
                     });
                   }}
                 >
-                  {item.location}
+                  {item.locationName}
                 </Text>
               </View>
             </View>
@@ -121,6 +192,7 @@ const styles = StyleSheet.create({
     color: "#BDBDBD ",
     fontFamily: "Poppins-Medium",
     fontSize: 16,
+    marginLeft: 5,
     textDecorationLine: "underline",
   },
   comentsInfo: {

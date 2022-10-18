@@ -19,7 +19,6 @@ import { collection, addDoc } from "firebase/firestore";
 import uuid from "react-native-uuid";
 import * as Location from "expo-location";
 import * as ImagePicker from "expo-image-picker";
-import * as MediaLibrary from "expo-media-library";
 import { db, storage } from "../../../assets/firebase/config";
 
 function CreatePostsScreen({ navigation }) {
@@ -28,7 +27,7 @@ function CreatePostsScreen({ navigation }) {
   const [locationName, setLocationName] = useState("");
   const [photoName, setPhotoName] = useState("");
 
-
+  console.log("photoUri-------", photoUri);
   const [focus, setFocus] = useState(false);
   const { userId, login } = useSelector((state) => state.auth);
   useEffect(() => {
@@ -80,6 +79,7 @@ function CreatePostsScreen({ navigation }) {
         return;
       }
       const location = await Location.getCurrentPositionAsync({});
+      console.log("location-----", location);
 
       return { photo, location };
     } catch (err) {
@@ -114,11 +114,11 @@ function CreatePostsScreen({ navigation }) {
       return;
     }
     try {
-      reset();
       await createPost();
       navigation.navigate("Posts", {
         photoUri,
       });
+      reset();
     } catch (err) {
       console.log(err);
     }
@@ -185,16 +185,20 @@ function CreatePostsScreen({ navigation }) {
           <TouchableOpacity
             style={{
               ...styles.buttonSubmit,
-              backgroundColor: !photoUri ? "#515151" : "#FF6C00",
+              backgroundColor: !(photoUri && photoName && locationName)
+                ? "#515151"
+                : "#FF6C00",
             }}
-            disabled={!photoUri}
+            disabled={!(photoUri && photoName && locationName)}
             onPress={onSubmit}
           >
             <View style={styles.textButton}>
               <Text
                 style={{
                   ...styles.btnText,
-                  color: !photoUri ? "#fff" : "#000",
+                  color: !(photoUri && photoName && locationName)
+                    ? "#fff"
+                    : "#000",
                 }}
               >
                 Create
