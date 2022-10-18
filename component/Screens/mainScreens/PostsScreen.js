@@ -16,7 +16,6 @@ function PostsScreen({ route, navigation }) {
       setPost((prevState) => [...prevState, route.params]);
     }
   }, [route.params]);
-  console.log(post);
   return (
     <View style={styles.container}>
       <TouchableOpacity

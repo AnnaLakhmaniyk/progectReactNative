@@ -1,5 +1,6 @@
-import { Camera, CameraType } from "expo-camera";
+import { Camera } from "expo-camera";
 import { useState, useEffect } from "react";
+import { useSelector } from "react-redux";
 import {
   StyleSheet,
   Text,
@@ -13,16 +14,23 @@ import {
   Keyboard,
 } from "react-native";
 import { AntDesign, MaterialIcons, Ionicons } from "@expo/vector-icons";
+import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
+import { collection, addDoc } from "firebase/firestore";
+import uuid from "react-native-uuid";
 import * as Location from "expo-location";
+import * as ImagePicker from "expo-image-picker";
+import * as MediaLibrary from "expo-media-library";
+import { db, storage } from "../../../assets/firebase/config";
 
 function CreatePostsScreen({ navigation }) {
   const [snap, setSnap] = useState(null);
-  const [photo, setPhoto] = useState("");
-  const [location, setLocation] = useState("");
-  const [coordinatPhoto, setCoordinatPhoto] = useState({});
+  const [photoUri, setPhotoUri] = useState("");
+  const [locationName, setLocationName] = useState("");
   const [photoName, setPhotoName] = useState("");
 
+
   const [focus, setFocus] = useState(false);
+  const { userId, login } = useSelector((state) => state.auth);
   useEffect(() => {
     const onChange = () => {
       const width = Dimensions.get("window").width;
@@ -38,32 +46,78 @@ function CreatePostsScreen({ navigation }) {
     }
     try {
       const photo = await snap.takePictureAsync();
+      setPhotoUri(photo.uri);
+    } catch (e) {
+      console.log(e);
+    }
+  };
+  const uploadePhoto = async () => {
+    let result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.All,
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 1,
+    });
+
+    if (!result.cancelled) {
+      setPhotoUri(result.uri);
+    }
+  };
+  const uploadePhotoToServer = async () => {
+    try {
+      const postId = uuid.v4().split("-").join("");
+      const response = await fetch(photoUri);
+      const file = await response.blob();
+      const storageRef = await ref(storage, `posts/${postId}`);
+      console.log("storageRef -----", storageRef);
+      await uploadBytesResumable(storageRef, file);
+      const photo = await getDownloadURL(storageRef);
+      console.log("photo-----", photo);
+
       let { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== "granted") {
         console.log("Permission to access location was denied");
         return;
       }
       const location = await Location.getCurrentPositionAsync({});
-      setCoordinatPhoto(location.coords);
-      setPhoto(photo.uri);
+
+      return { photo, location };
+    } catch (err) {
+      console.log(err);
+    }
+  };
+  const createPost = async () => {
+    try {
+      const { photo, location } = await uploadePhotoToServer();
+      await addDoc(collection(db, "posts"), {
+        photo,
+        name: photoName,
+        locationName,
+        location,
+        userId,
+        login,
+        comments: 0,
+        likes: [],
+      });
     } catch (e) {
-      console.log(e);
+      console.error("Error adding document: ", e);
     }
   };
   const reset = () => {
-    setLocation("");
     setPhotoName("");
-    setPhoto("");
-    setCoordinatPhoto({});
+    setPhotoUri("");
+    setLocationName("");
   };
   const onSubmit = async () => {
+    Keyboard.dismiss();
+    if (!locationName && !photoName) {
+      return;
+    }
     try {
       reset();
+      await createPost();
       navigation.navigate("Posts", {
-        photo,
-        location,
-        photoName,
-        coordinatPhoto,
+        photoUri,
       });
     } catch (err) {
       console.log(err);
@@ -74,16 +128,23 @@ function CreatePostsScreen({ navigation }) {
     <View style={styles.container}>
       <View style={styles.containerCamera}>
         <Camera style={styles.camera} ref={setSnap}>
-          {photo && (
+          {photoUri && (
             <View style={styles.containerPrevPhoto}>
-              <Image source={{ uri: photo }} style={styles.prevPhoto}></Image>
+              <Image
+                source={{ uri: photoUri }}
+                style={styles.prevPhoto}
+              ></Image>
             </View>
           )}
           <TouchableOpacity style={styles.buttonCamera} onPress={takePhoto}>
             <MaterialIcons name="photo-camera" size={24} color="#121212" />
           </TouchableOpacity>
         </Camera>
-        <TouchableOpacity activeOpacity={0.8} style={styles.addPhoto}>
+        <TouchableOpacity
+          activeOpacity={0.8}
+          style={styles.addPhoto}
+          onPress={() => uploadePhoto()}
+        >
           <Text style={styles.upLoadPhotoText}>Upload photo</Text>
         </TouchableOpacity>
       </View>
@@ -109,8 +170,8 @@ function CreatePostsScreen({ navigation }) {
               placeholder="Location"
               onFocus={() => setFocus(true)}
               onBlur={() => setFocus(false)}
-              onChangeText={setLocation}
-              value={location}
+              onChangeText={setLocationName}
+              value={locationName}
             ></TextInput>
             <Ionicons
               name="location-outline"
@@ -124,16 +185,16 @@ function CreatePostsScreen({ navigation }) {
           <TouchableOpacity
             style={{
               ...styles.buttonSubmit,
-              backgroundColor: !photo ? "#515151" : "#FF6C00",
+              backgroundColor: !photoUri ? "#515151" : "#FF6C00",
             }}
-            disabled={!photo}
+            disabled={!photoUri}
             onPress={onSubmit}
           >
             <View style={styles.textButton}>
               <Text
                 style={{
                   ...styles.btnText,
-                  color: !photo ? "#fff" : "#000",
+                  color: !photoUri ? "#fff" : "#000",
                 }}
               >
                 Create
@@ -155,9 +216,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     flex: 1,
   },
-  //   containerCamera: {
-  //     marginBottom: 20,
-  //   },
   camera: {
     position: "relative",
     height: 240,
