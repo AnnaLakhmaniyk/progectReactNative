@@ -43,6 +43,11 @@ function CreatePostsScreen({ navigation }) {
       return;
     }
     try {
+      // const { status } = await Camera.getCameraPermissionsAsync();
+      // if (status !== "granted") {
+      //   console.log("Permission to access camera was denied");
+      //   return;
+      // }
       const photo = await snap.takePictureAsync();
       setPhotoUri(photo.uri);
     } catch (e) {

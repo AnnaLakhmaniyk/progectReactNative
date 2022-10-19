@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect } from "react";
+import React, { useCallback } from "react";
 import { Provider } from "react-redux";
 import {
   StyleSheet,
@@ -10,22 +10,10 @@ import { useFonts } from "expo-font";
 import * as SplashScreen from "expo-splash-screen";
 
 import { NavigationContainer } from "@react-navigation/native";
-// import { createStackNavigator } from "@react-navigation/stack";
 import { UseRoute } from "./router";
 import { store } from "./redux/store";
 
-// import { authStateChangeUser } from "./redux/authOperation";
-
-// const Stack = createStackNavigator();
-
 export default function App() {
-  // const { state } = useSelector((state) => state.auth);
-  // const dispatch = useDispatch();
-
-  // useEffect(() => {
-  //   dispatch(authStateChangeUser());
-  // }, [state]);
-
   const [fontsLoaded] = useFonts({
     "Poppins-Medium": require("./assets/fonts/Poppins-Medium.ttf"),
     "Poppins-Regular": require("./assets/fonts/Poppins-Regular.ttf"),
@@ -47,7 +35,6 @@ export default function App() {
         <View style={styles.container} onLayout={onLayoutRootView}>
           <NavigationContainer>
             <UseRoute />
-            {/* <Stack.Navigator>{routing}</Stack.Navigator> */}
           </NavigationContainer>
         </View>
       </TouchableWithoutFeedback>
@@ -64,6 +51,5 @@ const styles = StyleSheet.create({
     flex: 1,
     resizeMode: "cover",
     justifyContent: "center",
-    // alignItems: "center",
   },
 });

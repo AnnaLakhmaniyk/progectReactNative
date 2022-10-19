@@ -100,12 +100,11 @@ function PostsScreen({ route, navigation }) {
           <View
             style={{
               marginBottom: 32,
-              justifyContent: "center",
             }}
           >
             <Image
               source={{ uri: item.photo }}
-              style={{ width: 360, height: 240 }}
+              style={{ height: 240, borderRadius: 16 }}
             />
 
             <View style={{ marginTop: 8 }}>
